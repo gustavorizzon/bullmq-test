@@ -1,0 +1,31 @@
+services:
+  redis:
+    image: redis:7-alpine
+    networks:
+      - server
+
+  apiWithQueue:
+    image: node:20-alpine
+    depends_on:
+      - redis
+    ports:
+      - 3000:3000
+    volumes:
+      - "./master:/app"
+    command: [node, "--watch", "/app/main-process.js"]
+    networks:
+      - server
+
+  queueWorkers:
+    depends_on:
+      - redis
+    image: node:20-alpine
+    volumes:
+      - "./workers:/app"
+    command: [node, "--watch", "/app/workers.js"]
+    networks:
+      - server
+
+networks:
+  server:
+    driver: bridge
